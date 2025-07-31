@@ -3,6 +3,8 @@ import { Edit, Heart, Clock, History, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { mockMovies, mockAnime, mockBooks } from '../data/mock';
 import ContentCard from '../components/ContentCard';
+import ContentPlayer from '../components/ContentPlayer';
+import { useContentPlayer } from '../hooks/useContentPlayer';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
@@ -11,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 
 const Profile = () => {
   const { user } = useAuth();
+  const { isPlayerOpen, currentContent, currentContentType, openPlayer, closePlayer } = useContentPlayer();
 
   if (!user) {
     return (
@@ -35,9 +38,8 @@ const Profile = () => {
     user.watchLater.includes(item.id)
   );
 
-  const handlePlayContent = (content) => {
-    console.log('Playing content from profile:', content);
-    // TODO: Implement video player modal
+  const handlePlayContent = (content, type) => {
+    openPlayer(content, type);
   };
 
   return (
@@ -113,7 +115,7 @@ const Profile = () => {
                           key={movie.id}
                           content={movie}
                           type="movie"
-                          onPlay={handlePlayContent}
+                          onPlay={(content) => handlePlayContent(content, 'movie')}
                         />
                       ))}
                     </div>
@@ -129,7 +131,7 @@ const Profile = () => {
                           key={anime.id}
                           content={anime}
                           type="anime"
-                          onPlay={handlePlayContent}
+                          onPlay={(content) => handlePlayContent(content, 'anime')}
                         />
                       ))}
                     </div>
@@ -145,7 +147,7 @@ const Profile = () => {
                           key={book.id}
                           content={book}
                           type="book"
-                          onPlay={handlePlayContent}
+                          onPlay={(content) => handlePlayContent(content, 'book')}
                         />
                       ))}
                     </div>
@@ -170,7 +172,7 @@ const Profile = () => {
                     key={content.id}
                     content={content}
                     type={content.episodes ? 'anime' : 'movie'}
-                    onPlay={handlePlayContent}
+                    onPlay={(content) => handlePlayContent(content, content.episodes ? 'anime' : 'movie')}
                   />
                 ))}
               </div>
@@ -198,7 +200,8 @@ const Profile = () => {
                           <img
                             src={content.thumbnail}
                             alt={content.title}
-                            className="w-16 h-24 object-cover rounded"
+                            className="w-16 h-24 object-cover rounded cursor-pointer"
+                            onClick={() => handlePlayContent(content, historyItem.contentType)}
                           />
                           <div className="flex-1">
                             <h4 className="font-semibold text-white">{content.title}</h4>
@@ -218,7 +221,7 @@ const Profile = () => {
                             </div>
                           </div>
                           <Button
-                            onClick={() => handlePlayContent(content)}
+                            onClick={() => handlePlayContent(content, historyItem.contentType)}
                             size="sm"
                             className="bg-red-600 hover:bg-red-700"
                           >
@@ -295,6 +298,14 @@ const Profile = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Content Player Modal */}
+      <ContentPlayer
+        content={currentContent}
+        contentType={currentContentType}
+        isOpen={isPlayerOpen}
+        onClose={closePlayer}
+      />
     </div>
   );
 };

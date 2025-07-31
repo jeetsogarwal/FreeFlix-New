@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Search, Play, Heart, Share, MessageCircle, Eye } from 'lucide-react';
 import { mockReels, mockGenres } from '../data/mock';
+import ContentPlayer from '../components/ContentPlayer';
+import { useContentPlayer } from '../hooks/useContentPlayer';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
@@ -11,10 +13,10 @@ const Reels = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('all');
   const [sortBy, setSortBy] = useState('trending');
+  const { isPlayerOpen, currentContent, currentContentType, openPlayer, closePlayer } = useContentPlayer();
 
   const handlePlayReel = (reel) => {
-    console.log('Playing reel:', reel);
-    // TODO: Implement reel player modal
+    openPlayer(reel, 'reel');
   };
 
   // Filter and sort reels
@@ -107,7 +109,7 @@ const Reels = () => {
         {filteredReels.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {filteredReels.map((reel) => (
-              <Card key={reel.id} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-all duration-300 overflow-hidden group">
+              <Card key={reel.id} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-all duration-300 overflow-hidden group cursor-pointer" onClick={() => handlePlayReel(reel)}>
                 <div className="relative aspect-[9/16] overflow-hidden">
                   <img
                     src={reel.thumbnail}
@@ -118,7 +120,6 @@ const Reels = () => {
                   {/* Play Overlay */}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                     <Button
-                      onClick={() => handlePlayReel(reel)}
                       size="lg"
                       className="bg-red-600 hover:bg-red-700 text-white rounded-full w-16 h-16"
                     >
@@ -161,15 +162,30 @@ const Reels = () => {
                 {/* Action Buttons */}
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between">
-                    <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-gray-400 hover:text-white"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Heart className="w-4 h-4 mr-1" />
                       Like
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-gray-400 hover:text-white"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <MessageCircle className="w-4 h-4 mr-1" />
                       Comment
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-gray-400 hover:text-white"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Share className="w-4 h-4 mr-1" />
                       Share
                     </Button>
@@ -187,6 +203,14 @@ const Reels = () => {
           </div>
         )}
       </div>
+
+      {/* Content Player Modal */}
+      <ContentPlayer
+        content={currentContent}
+        contentType={currentContentType}
+        isOpen={isPlayerOpen}
+        onClose={closePlayer}
+      />
     </div>
   );
 };

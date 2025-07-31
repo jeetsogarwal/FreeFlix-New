@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Search, Filter } from 'lucide-react';
 import { mockMovies, mockGenres } from '../data/mock';
 import ContentCard from '../components/ContentCard';
+import ContentPlayer from '../components/ContentPlayer';
+import { useContentPlayer } from '../hooks/useContentPlayer';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
@@ -10,10 +12,10 @@ const Movies = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('all');
   const [sortBy, setSortBy] = useState('name');
+  const { isPlayerOpen, currentContent, currentContentType, openPlayer, closePlayer } = useContentPlayer();
 
   const handlePlayContent = (content) => {
-    console.log('Playing movie:', content);
-    // TODO: Implement video player modal
+    openPlayer(content, 'movie');
   };
 
   // Filter and sort movies
@@ -119,6 +121,14 @@ const Movies = () => {
           </div>
         )}
       </div>
+
+      {/* Content Player Modal */}
+      <ContentPlayer
+        content={currentContent}
+        contentType={currentContentType}
+        isOpen={isPlayerOpen}
+        onClose={closePlayer}
+      />
     </div>
   );
 };

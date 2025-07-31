@@ -3,11 +3,14 @@ import { Link } from 'react-router-dom';
 import { Play, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
 import { mockMovies, mockAnime, mockBooks, mockReels } from '../data/mock';
 import ContentCard from '../components/ContentCard';
+import ContentPlayer from '../components/ContentPlayer';
+import { useContentPlayer } from '../hooks/useContentPlayer';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 
 const Home = () => {
   const [currentFeatured, setCurrentFeatured] = useState(0);
+  const { isPlayerOpen, currentContent, currentContentType, openPlayer, closePlayer } = useContentPlayer();
   
   // Get featured content
   const featuredContent = [
@@ -28,13 +31,19 @@ const Home = () => {
   const currentItem = featuredContent[currentFeatured];
 
   const handlePlayFeatured = () => {
-    console.log('Playing featured content:', currentItem);
-    // TODO: Implement video player modal
+    if (!currentItem) return;
+    
+    // Determine content type based on properties
+    let contentType = 'movie';
+    if (currentItem.episodes) contentType = 'anime';
+    else if (currentItem.author) contentType = 'book';
+    else if (currentItem.creator) contentType = 'reel';
+    
+    openPlayer(currentItem, contentType);
   };
 
-  const handlePlayContent = (content) => {
-    console.log('Playing content:', content);
-    // TODO: Implement video player modal
+  const handlePlayContent = (content, type) => {
+    openPlayer(content, type);
   };
 
   return (
@@ -75,7 +84,7 @@ const Home = () => {
                       className="bg-red-600 hover:bg-red-700 text-white px-8"
                     >
                       <Play className="w-5 h-5 mr-2" />
-                      Play Now
+                      {currentItem.author ? 'Read Now' : currentItem.creator ? 'Watch Reel' : 'Play Now'}
                     </Button>
                     <Button 
                       variant="outline" 
@@ -140,7 +149,7 @@ const Home = () => {
                 key={movie.id}
                 content={movie}
                 type="movie"
-                onPlay={handlePlayContent}
+                onPlay={(content) => handlePlayContent(content, 'movie')}
               />
             ))}
           </div>
@@ -160,7 +169,7 @@ const Home = () => {
                 key={anime.id}
                 content={anime}
                 type="anime"
-                onPlay={handlePlayContent}
+                onPlay={(content) => handlePlayContent(content, 'anime')}
               />
             ))}
           </div>
@@ -180,7 +189,7 @@ const Home = () => {
                 key={book.id}
                 content={book}
                 type="book"
-                onPlay={handlePlayContent}
+                onPlay={(content) => handlePlayContent(content, 'book')}
               />
             ))}
           </div>
@@ -196,16 +205,15 @@ const Home = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {mockReels.slice(0, 4).map((reel) => (
-              <Card key={reel.id} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-colors cursor-pointer">
+              <Card key={reel.id} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-colors cursor-pointer group" onClick={() => handlePlayContent(reel, 'reel')}>
                 <div className="relative aspect-[9/16] overflow-hidden rounded-t-lg">
                   <img
                     src={reel.thumbnail}
                     alt={reel.title}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                     <Button
-                      onClick={() => handlePlayContent(reel)}
                       size="sm"
                       className="bg-red-600 hover:bg-red-700 text-white"
                     >
@@ -226,6 +234,14 @@ const Home = () => {
           </div>
         </section>
       </div>
+
+      {/* Content Player Modal */}
+      <ContentPlayer
+        content={currentContent}
+        contentType={currentContentType}
+        isOpen={isPlayerOpen}
+        onClose={closePlayer}
+      />
     </div>
   );
 };

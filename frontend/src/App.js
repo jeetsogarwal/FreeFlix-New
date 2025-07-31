@@ -1,53 +1,132 @@
-import { useEffect } from "react";
+import React from "react";
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { Toaster } from "./components/ui/toaster";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+// Components
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
+// Pages
+import Home from "./pages/Home";
+import Movies from "./pages/Movies";
+import Anime from "./pages/Anime";
+import Books from "./pages/Books";
+import Reels from "./pages/Reels";
+import Auth from "./pages/Auth";
+import Profile from "./pages/Profile";
 
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const { user, isLoading } = useAuth();
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="flex items-center space-x-2 text-white">
+          <div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  return user ? children : <Navigate to="/login" replace />;
+};
+
+// Public Route Component (redirects to home if already logged in)
+const PublicRoute = ({ children }) => {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="flex items-center space-x-2 text-white">
+          <div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  return user ? <Navigate to="/" replace /> : children;
+};
+
+const AppContent = () => {
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
+    <div className="App min-h-screen bg-black">
+      <Navbar />
+      <main>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/movies" element={<Movies />} />
+          <Route path="/anime" element={<Anime />} />
+          <Route path="/books" element={<Books />} />
+          <Route path="/reels" element={<Reels />} />
+          
+          {/* Auth Routes */}
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <Auth />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              <PublicRoute>
+                <Auth />
+              </PublicRoute>
+            }
+          />
+
+          {/* Protected Routes */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/favorites"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/watch-later"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Catch all route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+      <Footer />
+      <Toaster />
     </div>
   );
 };
 
 function App() {
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
